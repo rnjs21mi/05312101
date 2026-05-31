@@ -6212,7 +6212,7 @@
            Tailscale VPN 연결 필수.
            ══════════════════════════════════════════════════════════════ */
         const API_CONFIG = {
-           BASE_URL: 'https://hv-pi5.taila21deb.ts.net',  // Raspberry Pi Tailscale IP
+            BASE_URL: 'http://100.116.38.125:8000',   // Raspberry Pi Tailscale IP
             API_KEY: '61a86d71811c57d565e27371bad6011060a492d1252111f09bed4688f6f9f65a',   // HEXAVISION_API_KEY
             USE_MOCK: false,                       // ← true: mock 데이터 / false: 실제 백엔드 호출
             POLL_INTERVAL: 5000,                  // 주차 현황 폴링 (ms)
@@ -6364,7 +6364,7 @@
         /* ══════════════════════════════════════════════════════════════ */
 
         let generatedOTP = "";
-        let favorites = new Set();
+        let favorites = new Set(['캡스톤 모형 주차장']);
         let currentTheme = localStorage.getItem('smartParkingTheme') || 'dark';
         let favExpanded = false;
 
@@ -6380,6 +6380,12 @@
         let currentSelectedCardIndex = 0; // 정산 시 선택된 카드 인덱스
 
         const parkingDB = [
+            {
+                name: "캡스톤 모형 주차장", addr: "공학관 캡스톤디자인 실습실 (8슬롯 모형)", city: "대구",
+                total: 8, occ: 0, hours: "24시간", fee: "무료",
+                seasons: ["학기 무료권 지원"],
+                mapPattern: [false, false, false, false, false, false, false, false]
+            },
             {
                 name: "서울 시청 주차장", addr: "서울특별시 중구 세종대로 110", city: "서울",
                 total: 80, occ: 55, hours: "07:00~22:00", fee: "1,000원/30분",
@@ -6496,11 +6502,11 @@
             'test@cu.ac.kr': {
                 name: '이유준',
                 pw: '1234',
-                parking: '이용 중인 주차장 없음',
-                stats: { total: 0, occ: 0, free: 0 },
+                parking: '캡스톤 모형 주차장',
+                stats: { total: 8, occ: 0, free: 8 },
                 cards: [],
                 vehicles: [],
-                mapPattern: [false, false, false, false, false, false, false, false, false, false],
+                mapPattern: [false, false, false, false, false, false, false, false],
                 history: []
             },
             'ms5@messi.com': {
@@ -7090,7 +7096,7 @@
             if (!isDemoMode) return;
             const target = currentDemoRole === 'user'
                 ? { id: 'admin/777', pw: '1234' }
-                : { id: 'test@cu.ac.com', pw: '1234' };
+                : { id: 'test@cu.ac.kr', pw: '1234' };
 
             // 현재 세션 정리 (로그아웃 모달 없이 즉시)
             stopTimer();
@@ -7098,6 +7104,7 @@
             currentUser = null;
             currentAdmin = null;
             favorites.clear();
+            favorites.add('캡스톤 모형 주차장');
             favExpanded = false;
             currentMapParking = null;
             currentSelectedCardIndex = 0;
@@ -7213,6 +7220,7 @@
             stopTimer();
             currentUser = null;
             favorites.clear();
+            favorites.add('캡스톤 모형 주차장');
             favExpanded = false;
             currentMapParking = null;
             currentSelectedCardIndex = 0;
@@ -7744,9 +7752,8 @@
             if (API_CONFIG.USE_MOCK) return null;
             const data = await apiSpots();
             if (!data || !Array.isArray(data)) return null;
-            // 백엔드가 반환한 spot 배열을 10개 패턴 배열로 매핑
-            // (실제 백엔드 응답 구조에 맞게 조정 필요)
-            return data.slice(0, 10).map(s => s.is_occupied === true || s.is_occupied === 1);
+            const totalSpots = (currentUser && currentUser.parking === ADMIN_PARKING_NAME) ? 8 : 10;
+            return data.slice(0, totalSpots).map(s => s.is_occupied === true || s.is_occupied === 1);
         }
 
         let appMapPollInterval = null;
@@ -7782,7 +7789,8 @@
                 /* 🔌 현재 주차장은 실시간 점유 상태로 갱신 */
                 const livePattern = await fetchAndUpdateMapPattern();
                 if (livePattern && livePattern.length > 0) {
-                    pattern = livePattern.concat(Array(10).fill(false)).slice(0, 10);
+                    const totalSpots = (currentUser.parking === ADMIN_PARKING_NAME) ? 8 : 10;
+                    pattern = livePattern.concat(Array(totalSpots).fill(false)).slice(0, totalSpots);
                     currentUser.mapPattern = pattern;
                 }
             } else {
@@ -7805,12 +7813,13 @@
                 });
                 grid.appendChild(col);
             };
-            addCol(spots.slice(0, 5));
+            const mid = Math.ceil(spots.length / 2);
+            addCol(spots.slice(0, mid));
             const road = document.createElement('div');
             road.className = 'p-road';
             road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
             grid.appendChild(road);
-            addCol(spots.slice(5, 10));
+            addCol(spots.slice(mid));
         }
 
         /* ── 회원가입 ── */
@@ -7898,13 +7907,13 @@
         function getAdminParking() {
             return parkingDB.find(p => p.name === ADMIN_PARKING_NAME) || {
                 name: ADMIN_PARKING_NAME,
-                addr: '',
-                total: 10,
+                addr: '공학관 캡스톤디자인 실습실 (8슬롯 모형)',
+                total: 8,
                 occ: 0,
-                hours: '-',
-                fee: '-',
-                seasons: [],
-                mapPattern: Array(10).fill(false)
+                hours: '24시간',
+                fee: '무료',
+                seasons: ['학기 무료권 지원'],
+                mapPattern: [false, false, false, false, false, false, false, false]
             };
         }
 
@@ -8240,12 +8249,13 @@
                 });
                 grid.appendChild(col);
             };
-            addCol(spots.slice(0, 5));
+            const mid = Math.ceil(spots.length / 2);
+            addCol(spots.slice(0, mid));
             const road = document.createElement('div');
             road.className = 'p-road';
             road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
             grid.appendChild(road);
-            addCol(spots.slice(5, 10));
+            addCol(spots.slice(mid));
         }
 
         /* ══ 정기권 설정 (취창업관 전용) ══ */
@@ -8785,14 +8795,14 @@
     </script>
 
     <script>
-        /* ── PWA 서비스워커 등록 ── */
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW 등록 성공:', reg.scope))
-                    .catch(err => console.log('SW 등록 실패:', err));
-            });
-        }
+        //    /* ── PWA 서비스워커 등록 ── */
+        //    if ('serviceWorker' in navigator) {
+        //        window.addEventListener('load', () => {
+        //            navigator.serviceWorker.register('./service-worker.js')
+        //                .then(reg => console.log('SW 등록 성공:', reg.scope))
+        //                .catch(err => console.log('SW 등록 실패:', err));
+        //        });
+        //    }
     </script>
 
 </body>
