@@ -2099,6 +2099,10 @@
             width: 100%;
         }
 
+        .app-nav-brand {
+            display: none !important;
+        }
+
         .an-item {
             display: flex;
             flex-direction: column;
@@ -4415,9 +4419,8 @@
                 overflow-y: auto;
             }
 
-            .app-nav::before {
-                content: 'SMART PARKING';
-                display: block;
+            .app-nav-brand {
+                display: block !important;
                 padding: 12px 14px 18px;
                 font-size: 13px;
                 font-weight: 900;
@@ -4425,6 +4428,16 @@
                 color: var(--text-primary);
                 border-bottom: 1px solid var(--border-1);
                 margin-bottom: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                user-select: none;
+            }
+            .app-nav-brand:hover {
+                color: var(--brand-bright);
+                opacity: 0.85;
+            }
+            .app-nav-brand:active {
+                transform: scale(0.97);
             }
 
             .app-nav::after {
@@ -4769,6 +4782,19 @@
             margin-right: 12px;
             padding-right: 14px;
             border-right: 1px solid var(--border-1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .hv-brand-cluster:hover, .admin-header-left:hover {
+            opacity: 0.85;
+            filter: brightness(1.15);
+        }
+
+        .hv-brand-cluster:active, .admin-header-left:active {
+            transform: scale(0.97);
+            opacity: 0.7;
         }
 
         .hv-brand-cluster .hv-mark {
@@ -4790,6 +4816,11 @@
         /* Admin header — swap "ADMIN" badge into the owl-flanked cluster */
         .admin-header-left {
             gap: 10px !important;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
         }
 
         .admin-header-left .hv-mark {
@@ -4806,15 +4837,6 @@
             font-family: var(--display);
             font-weight: 700;
             letter-spacing: -0.005em;
-        }
-
-        /* Bottom nav 7-inch label (was "SMART PARKING") */
-        @media (min-width: 600px) and (max-width: 1100px) {
-            .app-nav::before {
-                content: 'HEXAVISION' !important;
-                font-family: var(--display) !important;
-                letter-spacing: 0.04em !important;
-            }
         }
 
         /* ── Login screen: replace P-block with owl SVG + HexaVision wordmark ── */
@@ -5523,7 +5545,8 @@
             <button style="margin-top:20px; color:var(--text-secondary); background:none; border:none; cursor:pointer;"
                 onclick="showSignup()">회원가입</button>
 
-            <!-- 시연용 데모 빠른시작 -->
+            <!-- 시연용 데모 빠른시작 (비활성화) -->
+            <!--
             <div class="demo-quickstart">
                 <div class="demo-quickstart-header">
                     <span class="demo-quickstart-label">Demo Quick Start</span>
@@ -5560,9 +5583,11 @@
                     </button>
                 </div>
             </div>
+            -->
         </div>
 
-        <!-- 데모 모드 인디케이터 (로그인 후 항상 표시) -->
+        <!-- 데모 모드 인디케이터 (로그인 후 항상 표시) (비활성화) -->
+        <!--
         <div class="demo-indicator" id="demo-indicator" onclick="toggleDemoRole()">
             <span class="demo-indicator-icon">D</span>
             <span id="demo-indicator-role">USER</span>
@@ -5571,6 +5596,7 @@
                 <span id="demo-indicator-swap-label">SWAP</span>
             </span>
         </div>
+        -->
 
         <!-- 데모 모드 계정 선택 모달 (인디케이터에서 호출) -->
         <div class="demo-modal-overlay" id="demo-modal-overlay" onclick="if(event.target===this)closeDemoModal()">
@@ -5679,7 +5705,7 @@
         <div class="app-screen-container" id="main-app" style="display:none;">
             <div class="app-content">
                 <div class="app-header">
-                    <span class="hv-brand-cluster">
+                    <span class="hv-brand-cluster" onclick="swapUserAdminRole()" title="사용자/관리자 역할 전환">
                         <svg class="hv-mark" viewBox="0 0 64 64" aria-hidden="true">
                             <path d="M19 36 L11 46 L14 54 L23 51 Z" fill="#3F51B5" />
                             <path d="M45 36 L53 46 L50 54 L41 51 Z" fill="#3F51B5" />
@@ -5777,22 +5803,30 @@
 
                     <!-- 맵 -->
                     <div id="pg-map" class="app-page">
-                        <div class="map-legend">
-                            <div class="legend-item">
-                                <span class="legend-dot"
-                                    style="background:rgba(52,211,153,0.3); border:1px solid var(--accent-green);"></span>빈자리
+                        <div id="map-active-content" style="display:none;">
+                            <div class="map-legend">
+                                <div class="legend-item">
+                                    <span class="legend-dot"
+                                        style="background:rgba(52,211,153,0.3); border:1px solid var(--accent-green);"></span>빈자리
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot"
+                                        style="background:rgba(244,63,94,0.3); border:1px solid var(--accent-red);"></span>주차중
+                                </div>
                             </div>
-                            <div class="legend-item">
-                                <span class="legend-dot"
-                                    style="background:rgba(244,63,94,0.3); border:1px solid var(--accent-red);"></span>주차중
+                            <div class="map-parking-title" id="map-parking-title">
+                                <i class="fas fa-map-marker-alt" style="color:var(--accent-blue);"></i>
+                                <span id="map-parking-name-label">-</span>
+                                <span id="map-current-badge" class="map-current-badge" style="display:none;">현재 주차 중</span>
+                            </div>
+                            <div class="parking-grid" id="app-map-grid"></div>
+                        </div>
+                        <div id="map-empty-state" style="display:none;">
+                            <div class="empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px 16px; color:var(--text-secondary); text-align:center; gap:16px; width:100%;">
+                                <i class="fas fa-parking" style="font-size:48px; color:var(--text-tertiary);"></i>
+                                <div style="font-size:14px; font-weight:600; line-height:1.6;">이용 중인 주차장이 없습니다.<br/><span style="font-size:12px; font-weight:400; color:var(--text-tertiary);">플레이스 탭에서 주차장을 탐색하고 맵에서 보기를 눌러주세요.</span></div>
                             </div>
                         </div>
-                        <div class="map-parking-title" id="map-parking-title">
-                            <i class="fas fa-map-marker-alt" style="color:var(--accent-blue);"></i>
-                            <span id="map-parking-name-label">-</span>
-                            <span id="map-current-badge" class="map-current-badge" style="display:none;">현재 주차 중</span>
-                        </div>
-                        <div class="parking-grid" id="app-map-grid"></div>
                     </div>
 
                     <!-- 플레이스 -->
@@ -5839,6 +5873,9 @@
 
                 <!-- 하단 네비 (검색 탭 제거) -->
                 <div class="app-nav">
+                    <div class="app-nav-brand" onclick="swapUserAdminRole()" title="사용자/관리자 역할 전환">
+                        <i class="fas fa-sync-alt" style="margin-right: 6px; font-size: 11px;"></i>HEXAVISION
+                    </div>
                     <div class="an-item active" onclick="appNav('home')"><i class="fas fa-home"></i>홈</div>
                     <div class="an-item" onclick="appNav('map')"><i class="fas fa-map"></i>맵</div>
                     <div class="an-item" onclick="appNav('place')"><i class="fas fa-map-marker-alt"></i>플레이스</div>
@@ -6021,7 +6058,7 @@
         <div id="admin-app">
             <div class="admin-inner">
                 <div class="admin-header">
-                    <div class="admin-header-left">
+                    <div class="admin-header-left" onclick="swapUserAdminRole()" title="사용자/관리자 역할 전환">
                         <svg class="hv-mark" viewBox="0 0 64 64" aria-hidden="true">
                             <path d="M19 36 L11 46 L14 54 L23 51 Z" fill="#3F51B5" />
                             <path d="M45 36 L53 46 L50 54 L41 51 Z" fill="#3F51B5" />
@@ -6113,7 +6150,7 @@
                         <div
                             style="text-align:center; font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:12px; padding:8px 12px; background:var(--app-card-bg); border:1px solid var(--app-border); border-radius:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
                             <i class="fas fa-map-marker-alt" style="color:var(--accent-blue);"></i>
-                            대구가톨릭대학교 취창업관 주차장
+                            캡스톤 모형 주차장
                             <span
                                 style="font-size:10px; background:rgba(52,211,153,0.15); color:var(--accent-green); padding:2px 8px; border-radius:20px; font-weight:600;">관리
                                 중</span>
@@ -6886,7 +6923,7 @@
 
             /* 🔌 백엔드 연동: POST /gate/exit */
             const vNum = (currentUser.vehicles && currentUser.vehicles.length > 0)
-                ? currentUser.vehicles[0].num : '';
+                ? currentUser.vehicles[0].num : '12가 3456';
             const exitResult = await apiGateExit(vNum);
 
             /* 실제 백엔드 요금을 받았으면 영수증 업데이트 */
@@ -6894,6 +6931,28 @@
                 const feeStr = (exitResult.fee || 0).toLocaleString() + '원';
                 const feeEl = document.getElementById('sheet-total-fee');
                 if (feeEl) feeEl.innerText = feeStr;
+            }
+
+            // 모의 결제 출차 동기화 보강
+            if (API_CONFIG.USE_MOCK) {
+                mockLogs.unshift({
+                    type: 'exit',
+                    carNum: vNum,
+                    time: new Date()
+                });
+                const p = parkingDB.find(x => x.name === '캡스톤 모형 주차장');
+                if (p) {
+                    const firstOcc = p.mapPattern.indexOf(true);
+                    if (firstOcc !== -1) {
+                        p.mapPattern[firstOcc] = false;
+                        const sensor = mockSensors.find(s => s.spot === (firstOcc + 1));
+                        if (sensor) {
+                            sensor.state = 'free';
+                            sensor.updated = new Date();
+                        }
+                    }
+                    p.occ = p.mapPattern.filter(Boolean).length;
+                }
             }
 
             setTimeout(() => {
@@ -7074,46 +7133,50 @@
         }
 
         function updateDemoIndicator() {
-            const el = document.getElementById('demo-indicator');
-            if (!el) return;
-            if (isDemoMode && currentDemoRole) {
-                el.classList.add('visible');
-                const roleEl = document.getElementById('demo-indicator-role');
-                const swapEl = document.getElementById('demo-indicator-swap-label');
-                if (currentDemoRole === 'user') {
-                    roleEl.textContent = 'USER';
-                    swapEl.textContent = '→ ADMIN';
-                } else {
-                    roleEl.textContent = 'ADMIN';
-                    swapEl.textContent = '→ USER';
-                }
-            } else {
-                el.classList.remove('visible');
-            }
+            // 빈 함수로 유지하여 기존 스크립트 호출로 인한 에러를 완벽하게 방지합니다.
         }
 
         function toggleDemoRole() {
-            if (!isDemoMode) return;
-            const target = currentDemoRole === 'user'
-                ? { id: 'admin/777', pw: '1234' }
-                : { id: 'test@cu.ac.kr', pw: '1234' };
+            swapUserAdminRole();
+        }
 
-            // 현재 세션 정리 (로그아웃 모달 없이 즉시)
+        function swapUserAdminRole() {
+            const isCurrentlyAdmin = document.getElementById('admin-app').style.display === 'flex';
+            
+            // 세션 및 타이머 확실히 클리어
             stopTimer();
             if (typeof stopCountdown === 'function') stopCountdown();
+            if (adminPollTimer) {
+                clearInterval(adminPollTimer);
+                adminPollTimer = null;
+            }
             currentUser = null;
             currentAdmin = null;
+            
+            // 초기 즐겨찾기 상태(캡스톤 모형 주차장 기본 탑재)로 안전 복구
             favorites.clear();
             favorites.add('캡스톤 모형 주차장');
             favExpanded = false;
             currentMapParking = null;
             currentSelectedCardIndex = 0;
+            
+            // 화면 감추기
             document.getElementById('main-app').style.display = 'none';
             document.getElementById('admin-app').style.display = 'none';
-            document.getElementById('pg-login').style.display = 'flex';
-
-            // 새로운 역할로 로그인
-            demoLogin(target.id, target.pw);
+            
+            isDemoMode = true;
+            if (isCurrentlyAdmin) {
+                currentDemoRole = 'user';
+                document.getElementById('login-id').value = 'test@cu.ac.kr';
+                document.getElementById('login-pw').value = '1234';
+            } else {
+                currentDemoRole = 'admin';
+                document.getElementById('login-id').value = 'admin/777';
+                document.getElementById('login-pw').value = '1234';
+            }
+            
+            // 즉시 로그인 실행 (화면 깜빡임 없는 무점멸 자동 로그인)
+            doLogin();
         }
 
         /* ── 로그인 ── */
@@ -7167,6 +7230,11 @@
 
                             // 백엔드 데이터로 하드코딩 데이터 덮어쓰기
                             currentUser.parking = dynamicData.parking;
+                            if (currentUser.parking && currentUser.parking !== '이용 중인 주차장 없음' && currentUser.parking !== '이용중인 주차장이 없음') {
+                                if (currentUser.parking === '대구가톨릭대학교 취창업관 주차장' || id === 'test@cu.ac.kr') {
+                                    currentUser.parking = '캡스톤 모형 주차장';
+                                }
+                            }
 
                             if (dynamicData.vehicles && dynamicData.vehicles.length > 0) {
                                 currentUser.vehicles = dynamicData.vehicles;
@@ -7760,9 +7828,23 @@
 
         async function renderAppMap() {
             const grid = document.getElementById('app-map-grid');
-            grid.innerHTML = '';
             const nameLabel = document.getElementById('map-parking-name-label');
             const currentBadge = document.getElementById('map-current-badge');
+            
+            const activeContent = document.getElementById('map-active-content');
+            const emptyState = document.getElementById('map-empty-state');
+
+            // 1. 이용 중인 주차장 및 탐색 주차장이 없을 때는 전체 영역을 완벽하게 가림
+            if (!currentMapParking && (!loginTimestamp || !currentUser || currentUser.parking === '이용 중인 주차장 없음' || currentUser.parking === '이용중인 주차장이 없음')) {
+                if (activeContent) activeContent.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+
+            // 2. 주차장이 활성화되면(차량이 주차 중이거나 플레이스에서 진입 시) 원본 주차 구조 노출
+            if (activeContent) activeContent.style.display = 'block';
+            if (emptyState) emptyState.style.display = 'none';
+
             let pattern;
             if (currentMapParking) {
                 const userParkingName = currentUser ? currentUser.parking : null;
@@ -7801,25 +7883,45 @@
                 currentBadge.style.display = 'none';
             }
             const spots = pattern.map((occ, i) => ({ id: i + 1, occ }));
-            const addCol = (list) => {
-                const col = document.createElement('div');
-                col.className = 'p-col';
-                list.forEach(s => {
-                    const d = document.createElement('div');
-                    d.className = `p-slot${s.occ ? ' occ' : ''}`;
-                    d.setAttribute('data-slot-num', String(s.id).padStart(2, '0'));
-                    d.innerHTML = s.occ ? '<i class="fas fa-car-side"></i>' : s.id;
-                    col.appendChild(d);
+            const slotElements = grid.querySelectorAll('.p-slot');
+            if (slotElements.length === spots.length) {
+                // 이미 슬롯들이 존재하면 DOM 재생성 없이 실시간 클래스 및 내부 텍스트만 갱신 (깜빡임 차단)
+                spots.forEach((s, i) => {
+                    const d = slotElements[i];
+                    const isCurrentlyOcc = d.classList.contains('occ');
+                    if (isCurrentlyOcc !== s.occ) {
+                        if (s.occ) {
+                            d.classList.add('occ');
+                            d.innerHTML = '<i class="fas fa-car-side"></i>';
+                        } else {
+                            d.classList.remove('occ');
+                            d.innerHTML = s.id;
+                        }
+                    }
                 });
-                grid.appendChild(col);
-            };
-            const mid = Math.ceil(spots.length / 2);
-            addCol(spots.slice(0, mid));
-            const road = document.createElement('div');
-            road.className = 'p-road';
-            road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
-            grid.appendChild(road);
-            addCol(spots.slice(mid));
+            } else {
+                // 최초 혹은 규격 변경 시에만 grid 전체 조립
+                grid.innerHTML = '';
+                const addCol = (list) => {
+                    const col = document.createElement('div');
+                    col.className = 'p-col';
+                    list.forEach(s => {
+                        const d = document.createElement('div');
+                        d.className = `p-slot${s.occ ? ' occ' : ''}`;
+                        d.setAttribute('data-slot-num', String(s.id).padStart(2, '0'));
+                        d.innerHTML = s.occ ? '<i class="fas fa-car-side"></i>' : s.id;
+                        col.appendChild(d);
+                    });
+                    grid.appendChild(col);
+                };
+                const mid = Math.ceil(spots.length / 2);
+                addCol(spots.slice(0, mid));
+                const road = document.createElement('div');
+                road.className = 'p-road';
+                road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
+                grid.appendChild(road);
+                addCol(spots.slice(mid));
+            }
         }
 
         /* ── 회원가입 ── */
@@ -7898,7 +8000,7 @@
 
         /* ── 관리자 계정 DB ── */
         const adminAccounts = {
-            'admin/777': { pw: '1234', name: '관리자', parkingName: '대구가톨릭대학교 취창업관 주차장' }
+            'admin/777': { pw: '1234', name: '관리자', parkingName: '캡스톤 모형 주차장' }
         };
         let currentAdmin = null;
 
@@ -7942,10 +8044,15 @@
             applyTheme(currentTheme);
             document.getElementById('admin-app').style.display = 'flex';
             adminNav('dashboard');
+            startAdminPolling();
         }
 
         /* ── 관리자 로그아웃 ── */
         function adminLogout() {
+            if (adminPollTimer) {
+                clearInterval(adminPollTimer);
+                adminPollTimer = null;
+            }
             currentAdmin = null;
             isDemoMode = false;
             currentDemoRole = null;
@@ -7988,9 +8095,16 @@
                 occupied = metrics.occupied_spots ?? metrics.occupied ?? occupied;
                 total = metrics.total_spots ?? metrics.total ?? total;
                 revenue = metrics.total_revenue ?? metrics.revenue ?? null;
-                p.occ = occupied;
-                p.total = total;
             }
+            if (p.name === '캡스톤 모형 주차장') {
+                total = 8;
+                const spotData = await apiSpots();
+                if (spotData && Array.isArray(spotData)) {
+                    occupied = spotData.slice(0, 8).filter(s => s.is_occupied === true || s.is_occupied === 1).length;
+                }
+            }
+            p.occ = occupied;
+            p.total = total;
 
             const free = total - occupied;
             const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
@@ -8217,7 +8331,6 @@
             const sel = document.getElementById('admin-map-select');
             if (sel) sel.style.display = 'none';
 
-            grid.innerHTML = '';
             // 🔌 실시간 점유 상태 반영
             const spotData = await apiSpots();
             if (spotData && Array.isArray(spotData)) {
@@ -8226,36 +8339,73 @@
                 });
             }
             const spots = p.mapPattern.map((occ, i) => ({ id: i + 1, occ }));
-            const addCol = (list) => {
-                const col = document.createElement('div');
-                col.className = 'p-col';
-                list.forEach(s => {
-                    const d = document.createElement('div');
-                    d.className = `p-slot${s.occ ? ' occ' : ''}`;
-                    /* 클릭으로 빈자리/주차중 토글 (수동 관리용) */
-                    d.onclick = () => {
-                        s.occ = !s.occ;
-                        d.className = `p-slot${s.occ ? ' occ' : ''} state-flash`;
+
+            const slotElements = grid.querySelectorAll('.p-slot');
+            if (slotElements.length === spots.length) {
+                // 이미 슬롯들이 렌더링되어 있다면 DOM을 파괴하지 않고 클래스와 내용만 실시간 갱신 (깜빡임 완벽 차단)
+                spots.forEach((s, i) => {
+                    const d = slotElements[i];
+                    const isCurrentlyOcc = d.classList.contains('occ');
+                    if (isCurrentlyOcc !== s.occ) {
+                        if (s.occ) {
+                            d.classList.add('occ');
+                            d.innerHTML = '<i class="fas fa-car-side"></i>';
+                        } else {
+                            d.classList.remove('occ');
+                            d.innerHTML = s.id;
+                        }
+                    }
+                });
+            } else {
+                // 최초 렌더링 시에만 grid 전체 조립
+                grid.innerHTML = '';
+                const addCol = (list) => {
+                    const col = document.createElement('div');
+                    col.className = 'p-col';
+                    list.forEach(s => {
+                        const d = document.createElement('div');
+                        d.className = `p-slot${s.occ ? ' occ' : ''}`;
+                        /* 클릭으로 빈자리/주차중 토글 (수동 관리용) */
+                        d.onclick = () => {
+                            s.occ = !s.occ;
+                            d.className = `p-slot${s.occ ? ' occ' : ''} state-flash`;
+                            d.setAttribute('data-slot-num', String(s.id).padStart(2, '0'));
+                            d.innerHTML = s.occ ? '<i class="fas fa-car-side"></i>' : s.id;
+                            setTimeout(() => d.classList.remove('state-flash'), 560);
+                            
+                            // 모의 데이터 동기화
+                            p.mapPattern[s.id - 1] = s.occ;
+                            p.occ = p.mapPattern.filter(Boolean).length;
+                            
+                            const sensor = mockSensors.find(sen => sen.spot === s.id);
+                            if (sensor) {
+                                sensor.state = s.occ ? 'occupied' : 'free';
+                                sensor.updated = new Date();
+                            }
+                            
+                            const fakePlate = (s.id === 1 && currentUser && currentUser.vehicles[0]) ? currentUser.vehicles[0].num : `34나 ${5000 + s.id}`;
+                            mockLogs.unshift({
+                                type: s.occ ? 'entry' : 'exit',
+                                carNum: fakePlate,
+                                time: new Date()
+                            });
+                            
+                            showAdminToast(s.occ ? `🚗 ${s.id}번 슬롯 — 주차 처리됨` : `✅ ${s.id}번 슬롯 — 빈자리 처리됨`);
+                        };
                         d.setAttribute('data-slot-num', String(s.id).padStart(2, '0'));
                         d.innerHTML = s.occ ? '<i class="fas fa-car-side"></i>' : s.id;
-                        setTimeout(() => d.classList.remove('state-flash'), 560);
-                        /* parkingDB 점유 수 동기화 */
-                        p.occ = p.mapPattern.filter(Boolean).length;
-                        showAdminToast(s.occ ? `🚗 ${s.id}번 슬롯 — 주차 처리됨` : `✅ ${s.id}번 슬롯 — 빈자리 처리됨`);
-                    };
-                    d.setAttribute('data-slot-num', String(s.id).padStart(2, '0'));
-                    d.innerHTML = s.occ ? '<i class="fas fa-car-side"></i>' : s.id;
-                    col.appendChild(d);
-                });
-                grid.appendChild(col);
-            };
-            const mid = Math.ceil(spots.length / 2);
-            addCol(spots.slice(0, mid));
-            const road = document.createElement('div');
-            road.className = 'p-road';
-            road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
-            grid.appendChild(road);
-            addCol(spots.slice(mid));
+                        col.appendChild(d);
+                    });
+                    grid.appendChild(col);
+                };
+                const mid = Math.ceil(spots.length / 2);
+                addCol(spots.slice(0, mid));
+                const road = document.createElement('div');
+                road.className = 'p-road';
+                road.innerHTML = '<span>&#9660;</span><span>ROAD</span><span>&#9650;</span>';
+                grid.appendChild(road);
+                addCol(spots.slice(mid));
+            }
         }
 
         /* ══ 정기권 설정 (취창업관 전용) ══ */
@@ -8426,6 +8576,24 @@
                     const plate = plates[Math.floor(Math.random() * plates.length)];
                     addLprLog(`✓ 번호판 인식 완료 → ${plate}`, 'ok');
                     addLprLog(`✓ DB 등록 완료 (자동 입차)`, 'ok');
+                    
+                    // 모의 입출차 로그 및 센서 연동 동기화
+                    mockLogs.unshift({
+                        type: 'entry',
+                        carNum: plate,
+                        time: new Date()
+                    });
+                    const firstFree = p.mapPattern.indexOf(false);
+                    if (firstFree !== -1 && firstFree < 8) {
+                        p.mapPattern[firstFree] = true;
+                        const sensor = mockSensors.find(s => s.spot === (firstFree + 1));
+                        if (sensor) {
+                            sensor.state = 'occupied';
+                            sensor.updated = new Date();
+                        }
+                    }
+                    p.occ = p.mapPattern.filter(Boolean).length;
+                    
                     lprScanning = false;
                     btn.classList.remove('scanning');
                     btn.classList.remove('scan-active');
@@ -8711,6 +8879,11 @@
 
                             // 백엔드 데이터로 하드코딩 데이터 덮어쓰기
                             currentUser.parking = dynamicData.parking;
+                            if (currentUser.parking && currentUser.parking !== '이용 중인 주차장 없음' && currentUser.parking !== '이용중인 주차장이 없음') {
+                                if (currentUser.parking === '대구가톨릭대학교 취창업관 주차장' || savedId === 'test@cu.ac.kr') {
+                                    currentUser.parking = '캡스톤 모형 주차장';
+                                }
+                            }
                             if (dynamicData.vehicles && dynamicData.vehicles.length > 0) {
                                 currentUser.vehicles = dynamicData.vehicles;
                             }
@@ -8745,6 +8918,27 @@
         }, { passive: false });
 
         /* ── 🔄 실시간 자동 새로고침 (백그라운드 폴링) ── */
+        let adminPollTimer = null;
+        function startAdminPolling() {
+            if (adminPollTimer) clearInterval(adminPollTimer);
+            adminPollTimer = setInterval(async () => {
+                const adminApp = document.getElementById('admin-app');
+                if (!adminApp || adminApp.style.display !== 'flex') return;
+
+                const activePage = document.querySelector('.admin-page.active');
+                if (!activePage) return;
+
+                const pid = activePage.id.replace('adpg-', '');
+                if (pid === 'dashboard') {
+                    await renderAdminDashboard();
+                } else if (pid === 'map') {
+                    await renderAdminMap();
+                } else if (pid === 'log') {
+                    await renderLogList();
+                }
+            }, 3000);
+        }
+
         let statePollTimer = null;
 
         function startStatePolling() {
@@ -8753,13 +8947,13 @@
             statePollTimer = setInterval(async () => {
                 if (!currentUser || API_CONFIG.USE_MOCK) return;
                 try {
+                    // 1. 사용자 입출차 상태 동기화 (기존 로직 유지)
                     const res = await fetch(`${API_CONFIG.BASE_URL}/users/${encodeURIComponent(currentUser.email)}/state`, {
                         headers: { 'X-API-Key': API_CONFIG.API_KEY }
                     });
                     if (res.ok) {
                         const dynamicData = await res.json();
 
-                        // 👇 핵심 수정: 시간에 'Z'를 붙여서 타임존 오차 해결
                         let eTime = dynamicData.entry_time;
                         if (eTime && !eTime.endsWith('Z')) eTime += 'Z';
 
@@ -8768,7 +8962,51 @@
                         if (loginTimestamp !== newEntryTime) {
                             loginTimestamp = newEntryTime;
                             currentUser.parking = dynamicData.parking;
+                            if (currentUser.parking && currentUser.parking !== '이용 중인 주차장 없음' && currentUser.parking !== '이용중인 주차장이 없음') {
+                                if (currentUser.parking === '대구가톨릭대학교 취창업관 주차장' || currentUser.email === 'test@cu.ac.kr') {
+                                    currentUser.parking = '캡스톤 모형 주차장';
+                                }
+                            }
                             updateAppData();
+                        }
+                    }
+
+                    // 2. 실시간 주차장 슬롯 상태 동기화
+                    const spotData = await apiSpots();
+                    if (spotData && Array.isArray(spotData)) {
+                        // 캡스톤 모형 주차장 객체 찾기
+                        const capstoneParking = parkingDB.find(x => x.name === '캡스톤 모형 주차장');
+                        if (capstoneParking) {
+                            // 패턴 업데이트
+                            spotData.forEach((s, i) => {
+                                if (i < capstoneParking.mapPattern.length) {
+                                    capstoneParking.mapPattern[i] = (s.is_occupied === true || s.is_occupied === 1);
+                                }
+                            });
+                            // 점유 면수 업데이트
+                            capstoneParking.occ = capstoneParking.mapPattern.filter(Boolean).length;
+                        }
+
+                        // 만약 로그인 정보가 있고 주차가 '캡스톤 모형 주차장'이라면 currentUser의 맵 패턴도 실시간 동기화
+                        if (currentUser.parking === '캡스톤 모형 주차장') {
+                            currentUser.mapPattern = [...capstoneParking.mapPattern];
+                        }
+                    }
+
+                    // 3. 현재 활성화된 사용자 페이지(탭) 실시간 리렌더링
+                    const mainApp = document.getElementById('main-app');
+                    if (mainApp && mainApp.style.display === 'flex') {
+                        const activePage = document.querySelector('.app-page.active');
+                        if (activePage) {
+                            const pid = activePage.id.replace('pg-', '');
+                            if (pid === 'home') {
+                                updateAppData();
+                                renderHomeFavorites();
+                            } else if (pid === 'map') {
+                                await renderAppMap();
+                            } else if (pid === 'place') {
+                                searchPlace();
+                            }
                         }
                     }
                 } catch (error) { }
